@@ -8,47 +8,47 @@ The package is adapted from the concepts and methods described in Edwards & Giff
 
 ## Core Features
 
-* **Kalman Filter & Smoother:** Estimates underlying allele frequency trajectories and posterior estimates, accounting for recombination and sampling noise.
-* **Two Analysis Modes:**
-    * `replicates`: For comparing replicate pools selected under the *same* condition against the null hypothesis of 0.5 allele frequency.
-    * `contrast`: For comparing pools selected under *different* conditions, testing for significant allele frequency differences between them.
-* **LOD Score Calculation:** Identifies genomic regions associated with the trait difference based on likelihood ratios.
-* **Permutation Testing & FDR:** Empirically estimates significance (p-values) and controls the False Discovery Rate (q-values) using genome-wide permutations.
-* **Gene Annotation:** Automatically annotates significant QTL regions using standard Bioconductor annotation databases (e.g., for *Saccharomyces cerevisiae*).
-* **Genome-wide Visualization:** Generates publication-quality plots of allele frequencies and LOD scores using `ggplot2`.
+-   **Kalman Filter & Smoother:** Estimates underlying allele frequency trajectories and posterior estimates, accounting for recombination and sampling noise.
+-   **Two Analysis Modes:**
+    -   `replicates`: For comparing replicate pools selected under the *same* condition against the null hypothesis of 0.5 allele frequency.
+    -   `contrast`: For comparing pools selected under *different* conditions, testing for significant allele frequency differences between them.
+-   **LOD Score Calculation:** Identifies genomic regions associated with the trait difference based on likelihood ratios.
+-   **Permutation Testing & FDR:** Empirically estimates significance (p-values) and controls the False Discovery Rate (q-values) using genome-wide permutations.
+-   **Gene Annotation:** Automatically annotates significant QTL regions using standard Bioconductor annotation databases (e.g., for *Saccharomyces cerevisiae*).
+-   **Genome-wide Visualization:** Generates publication-quality plots of allele frequencies and LOD scores using `ggplot2`.
 
 ## Installation
 
 You can install the development version of `multipoolR` from GitHub using the `devtools` package:
 
-```R
+``` r
 # install.packages("devtools") # If you don't have devtools installed
 devtools::install_github("clstacy/multipoolR")
 ```
 
 ## Dependencies
 
-`multipoolR` requires R (>= 4.0 recommended) and several packages from CRAN and Bioconductor.
+`multipoolR` requires R (\>= 4.0 recommended) and several packages from CRAN and Bioconductor.
 
-* **CRAN:**
-    * `ggplot2`
-    * `ggrepel`
-    * `checkmate`
-    * `lifecycle`
-    * `matrixStats`
-    * `future.apply` (Optional, only needed if using `parallel = TRUE` for permutations)
-* **Bioconductor:**
-    * `GenomicRanges`
-    * `GenomicFeatures`
-    * `AnnotationDbi`
-    * `GenomeInfoDb`
-    * `BiocGenerics`
-    * `S4Vectors`
-    * Specific annotation packages (e.g., `TxDb.Scerevisiae.UCSC.sacCer3.sgdGene`, `org.Sc.sgd.db` for yeast) are needed for the annotation feature and will be suggested during runtime if not installed.
+-   **CRAN:**
+    -   `ggplot2`
+    -   `ggrepel`
+    -   `checkmate`
+    -   `lifecycle`
+    -   `matrixStats`
+    -   `future.apply` (Optional, only needed if using `parallel = TRUE` for permutations)
+-   **Bioconductor:**
+    -   `GenomicRanges`
+    -   `GenomicFeatures`
+    -   `AnnotationDbi`
+    -   `GenomeInfoDb`
+    -   `BiocGenerics`
+    -   `S4Vectors`
+    -   Specific annotation packages (e.g., `TxDb.Scerevisiae.UCSC.sacCer3.sgdGene`, `org.Sc.sgd.db` for yeast) are needed for the annotation feature and will be suggested during runtime if not installed.
 
 You can install Bioconductor packages using `BiocManager`:
 
-```R
+``` r
 # if (!requireNamespace("BiocManager", quietly = TRUE))
 #     install.packages("BiocManager")
 # BiocManager::install(c("GenomicRanges", "GenomicFeatures", "AnnotationDbi", "GenomeInfoDb", "BiocGenerics", "S4Vectors"))
@@ -65,10 +65,10 @@ Input data for each pool can be provided as either:
 
 The data must contain the following columns (default names shown, can be customized using `col_*` arguments):
 
-* `chr`: Chromosome identifier (e.g., "chrI", "chrII", "1", "2"). Must be consistent between pools and match the annotation database style if used.
-* `pos`: Genomic position (numeric base pair coordinate).
-* `a`: Read count supporting allele 'A' (numeric integer).
-* `b`: Read count supporting allele 'B' (numeric integer).
+-   `chr`: Chromosome identifier (e.g., "chrI", "chrII", "1", "2"). Must be consistent between pools and match the annotation database style if used.
+-   `pos`: Genomic position (numeric base pair coordinate).
+-   `a`: Read count supporting allele 'A' (numeric integer).
+-   `b`: Read count supporting allele 'B' (numeric integer).
 
 A header line is expected by default (`header = TRUE`). If no header is present, set `header = FALSE` and ensure columns are in the order `chr` (optional), `pos`, `a`, `b`. If the `chr` column is missing (3-column format), `assume_chr` will be used.
 
@@ -76,7 +76,7 @@ A header line is expected by default (`header = TRUE`). If no header is present,
 
 The main function is `multipool()`. Here's a basic example using the included example dataset.
 
-```R
+``` r
 library(multipoolR)
 library(ggplot2) # For displaying the plot
 
@@ -139,19 +139,19 @@ print(results_mp$parameters)
 
 ## Key Parameters
 
-* `pool1`, `pool2`: Input data (file paths or data frames).
-* `N`: Effective population size (crucial for variance estimation).
-* `mode`: `"replicates"` or `"contrast"`.
-* `res`: Bin resolution (bp). Smaller bins give higher resolution but may have lower counts.
-* `cM`: Genetic map density (bp/cM). Affects the recombination rate `p` used in the Kalman filter.
-* `nperm`: Number of permutations. **Set > 0** (e.g., 1000+) for reliable p-values **and q-values.** `nperm = 0` runs the analysis faster but provides no statistical significance assessment beyond raw LOD scores.
-* `q_threshold`: Significance cutoff for FDR (q-value). Used for determining the `fdr_lod_threshold` and selecting genes for annotation/plotting.
-* `filter`: Apply default filters for low/high coverage and fixated markers (recommended).
-* `txdb`, `orgdb`: Bioconductor annotation database objects (required for annotation).
-* `col_chr`, `col_pos`, `col_a`, `col_b`: Customize input column names.
-* `header`, `assume_chr`: Control file parsing behavior.
-* `parallel`, `seed`: Control permutation execution.
-* `verbose`: Logical, control whether progress messages are printed (default: TRUE).
+-   `pool1`, `pool2`: Input data (file paths or data frames).
+-   `N`: Effective population size (crucial for variance estimation).
+-   `mode`: `"replicates"` or `"contrast"`.
+-   `res`: Bin resolution (bp). Smaller bins give higher resolution but may have lower counts.
+-   `cM`: Genetic map density (bp/cM). Affects the recombination rate `p` used in the Kalman filter.
+-   `nperm`: Number of permutations. **Set \> 0** (e.g., 1000+) for reliable p-values **and q-values.** `nperm = 0` runs the analysis faster but provides no statistical significance assessment beyond raw LOD scores.
+-   `q_threshold`: Significance cutoff for FDR (q-value). Used for determining the `fdr_lod_threshold` and selecting genes for annotation/plotting.
+-   `filter`: Apply default filters for low/high coverage and fixated markers (recommended).
+-   `txdb`, `orgdb`: Bioconductor annotation database objects (required for annotation).
+-   `col_chr`, `col_pos`, `col_a`, `col_b`: Customize input column names.
+-   `header`, `assume_chr`: Control file parsing behavior.
+-   `parallel`, `seed`: Control permutation execution.
+-   `verbose`: Logical, control whether progress messages are printed (default: TRUE).
 
 ## Citation
 
